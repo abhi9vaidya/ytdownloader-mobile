@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -18,9 +19,23 @@ import com.abhi9vaidya.ytdownloader.viewmodel.DownloaderViewModel
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: DownloaderViewModel
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.entries.all { it.value }
+        if (!allGranted) {
+            viewModel.setError("Permissions required for downloading and notifications.")
+        }
+    }
 
     private val progressReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -39,6 +54,8 @@ class MainActivity : ComponentActivity() {
             Python.start(AndroidPlatform(this))
         }
 
+        checkAndRequestPermissions()
+
         setContent {
             YTDownloaderTheme {
                 viewModel = viewModel()
@@ -52,6 +69,24 @@ class MainActivity : ComponentActivity() {
         }
 
         registerReceiver(progressReceiver, IntentFilter("DOWNLOAD_PROGRESS"))
+    }
+
+    private fun checkAndRequestPermissions() {
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+
+        val missingPermissions = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingPermissions.isNotEmpty()) {
+            requestPermissionLauncher.launch(missingPermissions.toTypedArray())
+        }
     }
 
     override fun onDestroy() {

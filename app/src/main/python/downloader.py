@@ -39,12 +39,15 @@ def download_video(url, download_path, progress_callback):
             progress_callback(100.0)
 
     ydl_opts = {
+        # Fallback to single file if ffmpeg is missing for merging
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'outtmpl': os.path.join(download_path, 'Shorts_%(title)s_%(id)s.%(ext)s'),
         'progress_hooks': [ydl_progress_hook],
         'merge_output_format': 'mp4',
         'quiet': True,
         'no_warnings': True,
+        # Avoid ffmpeg error if it's not found on system
+        'prefer_ffmpeg': False,
     }
 
     try:
@@ -52,6 +55,15 @@ def download_video(url, download_path, progress_callback):
             ydl.download([url])
         return {"success": True}
     except Exception as e:
+        # If it failed due to post-processing (usually ffmpeg), try again with basic format
+        if "ffmpeg" in str(e).lower():
+            ydl_opts['format'] = 'best[ext=mp4]/best'
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([url])
+                return {"success": True, "note": "Downloaded without merging due to missing ffmpeg"}
+            except Exception as e2:
+                return {"error": str(e2)}
         return {"error": str(e)}
 
 # For testing purposes
