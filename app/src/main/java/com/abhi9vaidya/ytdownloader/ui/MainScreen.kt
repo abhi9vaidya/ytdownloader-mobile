@@ -22,10 +22,10 @@ import com.abhi9vaidya.ytdownloader.service.DownloadService
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: DownloaderViewModel) {
-    var url by remember { mutableStateFlowOf("") }
-    val previewState by viewModel.previewState.collectAsState()
-    val progress by viewModel.downloadProgress.collectAsState()
-    val isDownloading by viewModel.isDownloading.collectAsState()
+    var url by remember { mutableStateOf("") }
+    val previewState by viewModel.previewState.collectAsState(initial = VideoPreviewState())
+    val progress by viewModel.downloadProgress.collectAsState(initial = 0f)
+    val isDownloading by viewModel.isDownloading.collectAsState(initial = false)
     val context = LocalContext.current
 
     Column(
@@ -45,7 +45,7 @@ fun MainScreen(viewModel: DownloaderViewModel) {
 
         OutlinedTextField(
             value = url,
-            onValueChange = { 
+            onValueChange = {
                 url = it
                 if (it.contains("youtube.com/shorts/") || it.contains("youtu.be/")) {
                     viewModel.fetchVideoInfo(it)
@@ -103,9 +103,9 @@ fun MainScreen(viewModel: DownloaderViewModel) {
                 Text("Download Video", fontSize = 18.sp)
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "For personal use only. Respect YouTube TOS.",
             style = MaterialTheme.typography.labelSmall,
@@ -162,7 +162,3 @@ fun DownloadProgressSection(progress: Float) {
         Text("Downloading...", style = MaterialTheme.typography.bodyMedium)
     }
 }
-
-// Helper to use StateFlow in Compose properly with remember
-@Composable
-fun <T> mutableStateFlowOf(value: T) = remember { mutableStateOf(value) }

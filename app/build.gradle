@@ -28,6 +28,8 @@ android {
             buildPython "python" // Or specify absolute path if necessary
             pip {
                 install "yt-dlp"
+                // Note: ffmpeg is a native binary and typically not available via pip on Android.
+                // Chaquopy cannot install system ffmpeg; yt-dlp will try to download formats that don't require merging.
             }
         }
     }
@@ -74,6 +76,9 @@ dependencies {
     
     // Coil for image loading (thumbnails)
     implementation "io.coil-kt:coil-compose:2.5.0"
+
+    // WorkManager for background tasks
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
 
     // Notifications
     implementation "androidx.core:core-google-shortcuts:1.1.0"
