@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">YTDownloader</string>
+    <string name="about_title">About YTDownloader</string>
+    <string name="about_text">This app is for personal and educational use only. Please respect YouTube's Terms of Service and do not redistribute downloaded content without permission. The downloader uses yt-dlp inside the app via Chaquopy. Some videos may be age-restricted, private, or otherwise unavailable.</string>
 </resources>
