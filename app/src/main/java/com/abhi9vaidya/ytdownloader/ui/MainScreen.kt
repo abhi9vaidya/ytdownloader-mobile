@@ -15,9 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.abhi9vaidya.ytdownloader.viewmodel.DownloaderViewModel
-import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
-import com.abhi9vaidya.ytdownloader.service.DownloadService
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,12 +84,7 @@ fun MainScreen(viewModel: DownloaderViewModel) {
             Button(
                 onClick = {
                     if (previewState.title.isNotEmpty()) {
-                        viewModel.setDownloading(true)
-                        val intent = Intent(context, DownloadService::class.java).apply {
-                            putExtra("url", url)
-                            putExtra("title", previewState.title)
-                        }
-                        context.startForegroundService(intent)
+                        viewModel.enqueueDownload(context, url, previewState.title)
                     }
                 },
                 modifier = Modifier

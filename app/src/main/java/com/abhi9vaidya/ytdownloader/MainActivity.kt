@@ -23,6 +23,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -49,7 +54,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
@@ -69,6 +74,31 @@ class MainActivity : ComponentActivity() {
         }
 
         registerReceiver(progressReceiver, IntentFilter("DOWNLOAD_PROGRESS"))
+
+        // Observe WorkManager work id from ViewModel and map WorkInfo -> ViewModel state
+        lifecycleScope.launch {
+            viewModel.currentWorkId.collectLatest { workId ->
+                if (workId != null) {
+                    val live = WorkManager.getInstance(applicationContext).getWorkInfoByIdLiveData(workId)
+                    live.observe(this@MainActivity) { info: WorkInfo? ->
+                        if (info != null) {
+                            val progress = info.progress.getFloat("progress", 0f)
+                            viewModel.updateProgress(progress)
+
+                            if (info.state.isFinished) {
+                                viewModel.setDownloading(false)
+                                if (info.state == WorkInfo.State.SUCCEEDED) {
+                                    viewModel.setError(null)
+                                } else {
+                                    val err = info.progress.getString("error") ?: info.outputData.getString("error")
+                                    if (!err.isNullOrEmpty()) viewModel.setError(err)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun checkAndRequestPermissions() {

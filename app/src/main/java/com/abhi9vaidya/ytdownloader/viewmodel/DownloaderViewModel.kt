@@ -1,11 +1,15 @@
 package com.abhi9vaidya.ytdownloader.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.abhi9vaidya.ytdownloader.repository.DownloadRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 data class VideoPreviewState(
     val title: String = "",
@@ -28,6 +32,9 @@ class DownloaderViewModel(private val repository: DownloadRepository = DownloadR
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+
+    private val _currentWorkId = MutableStateFlow<UUID?>(null)
+    val currentWorkId: StateFlow<UUID?> = _currentWorkId
 
     fun fetchVideoInfo(url: String) {
         if (url.isBlank()) return
@@ -61,5 +68,19 @@ class DownloaderViewModel(private val repository: DownloadRepository = DownloadR
 
     fun setError(message: String?) {
         _errorMessage.value = message
+    }
+
+    fun enqueueDownload(context: Context, url: String, title: String) {
+        viewModelScope.launch {
+            try {
+                val id = repository.enqueueDownload(context, url, title)
+                _currentWorkId.value = id
+                _isDownloading.value = true
+
+                // Optionally observe WorkManager state here in Activity using workId
+            } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage
+            }
+        }
     }
 }
