@@ -10,3 +10,9 @@ Quick steps to build & test:
 6. Monitor downloads in Downloads folder.
 
 Disclaimer: For personal/educational use only. Respect YouTube Terms of Service.
+
+Status: not fully finished (requires local build/test)
+- You still need to: run Gradle sync to allow Chaquopy to pip-install packages; bundle/provide ffmpeg binary for reliable merging; run the app on a device/emulator to verify end-to-end behavior.  
+- If you run into build or runtime errors, paste the logs here and I will provide focused fixes (e.g., Chaquopy configuration, ffmpeg packaging, Python-to-Kotlin progress callback bridge, or UI polish).
+
+Want me to add the ffmpeg-bundling extraction code and a Python-to-Kotlin callback proxy next?
